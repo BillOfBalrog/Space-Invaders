@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Meow Invaders</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body onload="onInit()" onkeydown="onKeyDown(event)">
+
+    <table class="board-container">
+        <tbody class="board"></tbody>
+    </table>
+
+    <div class="btn-container">
+        <p>Score: <span class="score"></span></p>
+        <button onclick="onRestart(this)">Start</button>
+        <button onclick="onHandleAlienFreeze()" class="freeze-btn">Alien Freeze: OFF</button>
+        <p>Alines On Board: <span class="aliens-count"></span></p>
+
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/hero.js"></script>
+    <script src="js/alien.js"></script>
+    <script src="js/game.js"></script>
+    
+</body>
+
+</html>
