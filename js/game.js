@@ -72,8 +72,8 @@ function init() {
 function startGame() {
     gGame.isOn = true
     startAlienMovement()
-    // startSpaceCandyInterval()
-    // startAliensThrowingRocksInterval()
+    startSpaceCandyInterval()
+    startAliensThrowingRocksInterval()
 }
 
 // Create and returns the board with aliens on top, ground at bottom

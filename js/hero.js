@@ -1,6 +1,6 @@
 // const LASER_SPEED = 30
 const SHIELD_DURATION = 5000
-const SUPER_LASER_DURATION = 3000
+const SUPER_LASER_DURATION = 300000
 
 let gHero
 let gIntervalLaser
@@ -19,13 +19,11 @@ let gLaserPos
 // for the same duration as the laser speed to indicate that if an aliens steps on a laser
 // then the laser is currently inactive the alien can step on it
 let gIsLaserHit = false
-let gIsRockHit = false
 let gIsBlowingUp // cool down for blow up negs function
-let gIntervalSuperLaser // used to clear the super laser interval of the laser when using blow up negs
 
 const gLaserSpeeds = {
     normal: 80,
-    super: 30
+    super: 50
 }
 
 // creates the hero and place it on board
@@ -99,7 +97,7 @@ function handleGameControls(keyCode) {
             moveHero(-1)
             break
         case 'Space':
-            onShoot()
+            shoot()
             break
         case 'KeyN':
             blowUpNeighbours()
@@ -125,61 +123,75 @@ function moveHero(dir) {
     // need to add when hero steps on a rock and not just if it hits directly
 }
 
-
-function onShoot() {
-    // Last update: Now that I think I finally have super laser working
-    // so far without bugs (all lasers clear)
-    // if I'll have time I'll incorporate superShoot() and shoot() back together
-    // in one function
-    gHero.isSuper ? superShoot() : shoot()
-}
-
-/////////////////////////////////////////////////////////////////////////
-// Some important notes about shoot:
-// I've spent countless hours upon hours returning to shoot and throwRock and move ghosts functions
-// 'On paper' it sounds good to rely ONLY on the model, but when you have lots of intervals at once
-// From my own experience of things being out of sync it's probably a good measure for some game objects
-// to also check if they exist in DOM and not only the model
-// I may be wrong about this but after spending a few days going crazy I'll just set it like this
-// That's the reason why those checks seem unnecessary and redundant
-// And yes I'm aware that a lot of this 'onLaserHit' function can be combined together
-// But after re-arranging dozens of times for "clean code" vs "debugging", I prefer them like they are now
+/////////////////////////////////////////////////////
+//  I came back to this function 20 times and wasted 
+// over a day on it instead of doing CSS for the project
 // 
-// Sets an interval for shutting (blinking) the laser up towards aliens
+// The reason for both DOM and Model check is simply because 
+// all these intervals together can be buggy and 
+// as programmers say 
+// "it doesn't work i don't understand why", "it works i don't understand why"
+// perhaps over the week i will come back to this and try and
+// use Model only without DOM at all
+//
+// My biggest dillema here was whether to still let the laser blink after it hit something
+// or return right away
+// because if you blink laser it's dangerous because a ghost can collide with it but that laser
+// is essentially already used up and should be gone
+// perhaps in the future what i will do is when a laser hits something,
+// instead of blinking with updating the model, it will only blink with a render
 function shoot() {
-    if (!gGame.isOn || gHero.isShoot) return
+    if (!gGame.isOn || gHero.isShoot && !gHero.isSuper) return
+
+    gHero.isShoot = true 
+    gLaserPos = null 
 
     const laserPos = { i: gHero.pos.i - 1, j: gHero.pos.j }
-
-    gIntervalLaser = setInterval(() => {
-        // if you place it before the function, and try to blow up very quickly after shooting
-        // it will blow up in the previous gLaserPos
-        gHero.isShoot = true 
-
+    const laser = setInterval(() => {
         if (laserPos.i < 0) {
+            clearInterval(laser)
             onLaserOutOfRange()
             return
         }
 
+        checkAndHandleLaserHits(laser,{...laserPos})
+
+        gIntervalLaser = laser
+        gLaserPos = {...laserPos}
+        blinkLaser({...laserPos})
+        laserPos.i--
+    }, getLaserSpeed()) 
+    gLasers.push({ interval: laser, pos: {...laserPos}})
+}
+
+function checkAndHandleLaserHits(laser, laserPos) {
+        if (isElLaser(laserPos) || isLaser(laserPos)) {
+            clearInterval(laser)
+            onLaserHitLaser()
+            return
+        }
+
         if (isElAlien(laserPos) || isAlien(laserPos)) {
+            clearInterval(laser)
             onLaserHitAlien(laserPos)
             return
         }
 
         if (isBunker(laserPos)) {
+            clearInterval(laser)
             onLaserHitBunker(laserPos)
         } else if (isElRock(laserPos) || isRock(laserPos)) {
+            clearInterval(laser)
             onLaserHitRock()
         } else if (isSpaceCandy(laserPos)) {
+            clearInterval(laser)
             onLaserHitSpaceCandy()
         }
-        
-        gLaserPos = {...laserPos}
-        blinkLaser({...laserPos})
-        laserPos.i--
-    }, getLaserSpeed())
 }
 
+// I want to add in the future a blink laser that only renders without updating the model
+// this sounds like a great idea to still display the object after it hit something for a while more
+// but not update the model of the game
 // renders a LASER at specific cell for short time and removes it
 function blinkLaser(pos) {
     if (!isEmpty(pos) && !isSpaceCandy(pos)) {
@@ -190,18 +202,12 @@ function blinkLaser(pos) {
     updateAndRenderCell(pos, getLaserGameObject())
     
     gTimeoutBlink = setTimeout(() => {
-        if (isLaser(pos)) updateAndRenderCell(pos)
+        if (isElBlowUpImg(pos)) updateCell(pos)
+        else if (isLaser(pos)) updateAndRenderCell(pos)
     }, getLaserSpeed())
 }
 
-//////////////////////////////////////////////////////
-// For all these helper functions related to shoot
-// the reason I'm not creating a clear interval and enable shooting again function
-// is because I'd like to clear the interval immediately, perform the actions needed
-// and only then enable shooting again
-
 function onLaserHitAlien(pos) {
-    clearInterval(gIntervalLaser)
     // comments about gIsLaserHit are at the top 
     // where it's declared
     if (gIsLaserHit) {
@@ -217,35 +223,41 @@ function onLaserHitAlien(pos) {
 }
 
 function onLaserHitBunker(pos) {
-    clearInterval(gIntervalLaser)
     console.log('Laser hit a bunker')
     handleBunkerHit(pos)
     gHero.isShoot = false
 }
 
+function onLaserHitLaser() {
+    console.log('Laser colliding with another laser')
+    gHero.isShoot = false
+}
+
 function onLaserHitRock() {
-    clearInterval(gIntervalLaser)
     console.log('Laser hit rock')
     clearRockInterval()
     gHero.isShoot = false
 }
 
 function onLaserHitSpaceCandy() {
-    clearInterval(gIntervalLaser)
     console.log('Laser hit a space candy')
     handleSpaceCandyHit()
     gHero.isShoot = false
 }
 
 function onLaserOutOfRange() {
-    clearInterval(gIntervalLaser)
     gHero.isShoot = false
 }
+
+//////////////////////////////////////////////////////
+// For all these helper functions related to shoot
+// the reason I'm not creating a clear interval and enable shooting again function
+// is because I'd like to clear the interval immediately, perform the actions needed
+// and only then enable shooting again
  
 function blowUpNeighbours() {
-    if (!gGame.isOn || !gHero.isShoot || gIsBlowingUp) return
+    if (!gGame.isOn || !gLaserPos || !gHero.isShoot || gIsBlowingUp) return
 
-    if (gHero.isSuper) clearInterval(gIntervalSuperLaser)
     clearInterval(gIntervalLaser)
     gIsBlowingUp = true // blow up cooldown
     setTimeout(() => {  
@@ -291,70 +303,6 @@ function blowUpNeighbour(pos, isExplode = null) {
     },3000)
 }
 
-/////////////////////////////////////////////////////
-// I already previously implemented the super laser 
-// inside the shoot function
-// it worked perfectly as long as the ghosts did not move
-// when the aliens move the laser sometimes has clearing issues
-// this is because if a ghost hits (not laser hits a ghost)
-// the ghost now has to clear the laser and find it in the intervals array
-// therefore you need to attach an identifier like position to each interval
-// and update the position with the interval
-// i did all that....... and it still didn't clear all the time
-// i wasted way too many hours that i could have used on 
-// improving the looks of the project 
-// but coding is always more fun than improving the looks
-//
-// Update: It's now WORKING! Although there is a caveat.
-// if you allow the alien to die if it steps onto a laser then it's not fun
-// trying to find the correct interval to clear
-// if i have more time i will attempt it 
-function superShoot() {
-    if (!gGame.isOn || !gHero.isSuper || !gHero.superLaserCount) return
-
-    const laserPos = { i: gHero.pos.i - 1, j: gHero.pos.j }
-
-    const laser = setInterval(() => {
-        // semi okay solution to stop super lasers after using blow up negs
-        // if (gIsBlowingUp) clearInterval(laser)
-        gHero.isShoot = true
-        updateLaserPos(laser, {...laserPos})
-
-        if (laserPos.i < 0) {
-            clearInterval(laser)
-            gHero.isShoot = false 
-            return
-        }
-
-        if (isElAlien(laserPos) || isAlien(laserPos)) { 
-            clearInterval(laser)
-            handleAlienHit({...laserPos})
-            gHero.isShoot = false
-            return
-        }
-        
-        if (isBunker(laserPos)) {
-            clearInterval(laser)
-            handleBunkerHit(laserPos)
-            gHero.isShoot = false
-        } else if (isElRock(laserPos) || isRock(laserPos)) {
-            clearInterval(laser)
-            clearRockInterval()
-            gHero.isShoot = false
-        } else if (isSpaceCandy(laserPos)) {
-            clearInterval(laser)
-            handleSpaceCandyHit()
-            gHero.isShoot = false
-        }
-
-        gIntervalSuperLaser = laser
-        gLaserPos = {...laserPos}
-        blinkLaser({...laserPos})
-        laserPos.i--
-    }, getLaserSpeed())
-    gLasers.push({ interval: laser, pos: {...laserPos}})
-}
-
 ////////////////////////////////////////
 // HERO SHIElD
 
@@ -368,6 +316,8 @@ function enableHeroShield() {
     updateAndRenderCell(gHero.pos, getHeroGameObject())
 
     setTimeout(() => {
+		if (!gGame.isOn) return
+		
         gHero.isShield = false
         updateAndRenderCell(gHero.pos, GAME_OBJECTS.HERO)
     }, SHIELD_DURATION)

@@ -148,6 +148,7 @@ function handleAlienLaserCollision(fromPos, toPos) {
     updateCell(fromPos)
     
     gHero.isShoot = false
+    gHero.isShoot2 = false
     gIsLaserHit = false
 }
 
@@ -274,6 +275,8 @@ function onRockHitLaser() {
     clearRockInterval()
     console.log('Rock hit a laser')
     gHero.isShoot = false
+    gHero.isShoot2 = false
+
 }
 
 function onRockHitBunker(pos) {
