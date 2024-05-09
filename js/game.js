@@ -1,69 +1,96 @@
 'use strict'
 
 const BOARD_SIZE = 14
-const ALIEN_ROW_LENGTH = 8
-const ALIEN_ROW_COUNT = 3
-// const HERO = '♆'
-const HERO = `<img src="img/hero.png">`
-const ALIEN = '👽'
-const LASER = '⤊'
-// const LASER = '⚡'
-const CANDY = '🍬'
-const SKY = 'SKY'
-const GROUND = 'GROUND'
-const HERO_GROUND = 'HERO_GROUND'
-const EMPTY = ''
-const EXPLOSION1 = '💥'
-const EXPLOSION2 = '🔥'
-// const ROCK = '🪨'
-const ROCK = 'R'
+
+const GAME_OBJECTS = {
+    HERO: '♆',
+    HERO_SHIELD: '🌐',
+    ALIEN1: '👽',
+    ALIEN2: '👾',
+    ALIEN3: '🛸',
+    ALIEN4: '🤖',
+    ALIEN5: '👹',
+    LASER: '⤊',
+    LASER_SUPER: '^',
+    CANDY: '🪅',
+    ROCK: '🗿'
+}
+
+const GAME_TYPES = {
+    SKY: 'SKY',
+    BUNKER: 'BUNKER',
+    GROUND: 'GROUND',
+    HERO_GROUND: 'HERO_GROUND'
+}
+
+const gDifficultyLevels = {
+    easy: { rowLength: 8, rowCount: 3, speed: 500 },
+    normal: { rowLength: 8, rowCount: 4, speed: 450 },
+    hard: { rowLength: 10, rowCount: 5, speed: 400 },
+    extreme: { rowLength: 12, rowCount: 5, speed: 400 }
+}
+
+// just some extra emojis that aren't used in the model
+// but only for rendering
+const gameImages = {
+    explosion: '💥',
+    flames: '🔥'
+}
+
+const SPACE_CANDY_DURATION = 5000
+const SPACE_CANDY_INTERVAL_FREQ = 10000
+const FREEZE_ALIENS_DURATION = 5000
 
 // Matrix of cell objects. e.g.: {type: SKY, gameObject: ALIEN}
-var gBoard
-var gGame = {
+let gBoard
+let gGame = {
     isOn: false,
     alienCount: 0,
-    lives: 3
+    score: 0,
+    isAudioOn: true,
+    difficulty: 'normal',
+    isBunkers: true
 }
-var gScore
-var gIntervalCandy
+let gIntervalSpaceCandy
+let gTimeoutSpaceCandy
+// let gTimeoutAliensFreeze
 
-function onInit() {
+// Called when game loads
+function init() {
     gGame.isOn = false
-    gHero.isShoot = false
-    clearIntervalsAndTimeouts()
-
+    clearAllIntervals()
+    resetAliensConfig()
+    gGame.score = 0
+    gIsLaserHit = false
+    
     gBoard = createBoard()
     renderBoard(gBoard)
-    
-    gAliensDirection = 1
-    updateScore(0)
-    updateAliensCount()
+    enableStartButton()
+    renderGameStats()
 }
 
-function onStartGame() {
+function startGame() {
     gGame.isOn = true
-    gIntervalAliens = setInterval(moveAliens, ALIEN_SPEED)
-    gIntervalCandy = setInterval(addSpaceCandy, 10000)
-    gIntervalAliensShoot = setInterval(throwRock, 3000)
+    startAlienMovement()
+    // startSpaceCandyInterval()
+    // startAliensThrowingRocksInterval()
 }
 
 // Create and returns the board with aliens on top, ground at bottom
 // use the functions: createCell, createHero, createAliens
 function createBoard() {
-    var board = []
-    for (var i = 0; i < BOARD_SIZE; i++) {
-        board[i] = []
-        for (var j = 0; j < BOARD_SIZE; j++) {
-            board[i][j] = createCell()
-
-            if (i === BOARD_SIZE - 2) {
-                board[i][j].type = HERO_GROUND
-            } else if (i === BOARD_SIZE - 1) {
-                board[i][j].type = GROUND
-            }
+    const board = []
+    for (let i = 0; i < BOARD_SIZE; i++) {
+        board.push([])
+        for (let j = 0; j < BOARD_SIZE; j++) {
+            if (isBoardHeroGround(i)) {
+                board[i][j] = createCell(GAME_TYPES.HERO_GROUND)
+            } else if (isBoardGround(i)) {
+                board[i][j] = createCell(GAME_TYPES.GROUND)
+            } else board[i][j] = createCell()
         }
     }
+    if (gGame.isBunkers) createBunkers(board)
     createHero(board)
     createAliens(board)
     return board
@@ -71,109 +98,94 @@ function createBoard() {
 
 // Render the board as a <table> to the page
 function renderBoard(board) {
-    var strHTML = ''
-    for (var i = 0; i < BOARD_SIZE; i++) {
+    const elBoard = document.querySelector('.board')
+    let strHTML = ''
+    for (let i = 0; i < BOARD_SIZE; i++) {
         strHTML += '<tr>'
-        for (var j = 0; j < BOARD_SIZE; j++) {
+        for (let j = 0; j < BOARD_SIZE; j++) {
             const cell = board[i][j]
-            const className = `cell cell-${i}-${j} ${cell.type}`
-
-            strHTML += `<td data-i="${i}" data-j="${j}" class="${className}">${cell.gameObject}</td>`
+            const cellContent = cell.gameObject ? cell.gameObject : ''
+            const className = getClassName(i, j)
+            strHTML += `<td 
+                            data-i="${i}" data-j="${j}"
+                            class="${className}">
+                            ${cellContent}
+                        </td>`
         }
         strHTML += '</tr>'
     }
-    const elBoard = document.querySelector('.board')
     elBoard.innerHTML = strHTML
 }
 
+function gameOver(isHeroHit = false) {
+    // Need to add a modal later
+    // generate different msg depend if hero got hit by rock or aliens reached ground
+    gGame.isOn = false
+    clearAllIntervals()    
+    renderCell({...gHero.pos}, '⚰️')
+
+    if (isHeroHit) {
+        alert('Game Over! The hero was hit by a rock and has run out of lives.')
+    } else {
+        alert('Game Over! Aliens have reached the ground, defeating the hero.')
+    }
+}
+
+function handleSpaceCandyHit() {
+    gGame.score += 50
+    gIsAlienFreeze = true
+
+    renderScore()
+    renderFreeze()
+
+    setTimeout(() => {
+        gIsAlienFreeze = false
+        renderFreeze()
+    },FREEZE_ALIENS_DURATION)
+}
+
+function addSpaceCandy() {
+    if (!gGame.isOn) return
+    
+    const cellPos = getRndEmptyCandyPos()
+    if (!cellPos) return
+
+    updateAndRenderCell(cellPos, GAME_OBJECTS.CANDY)
+
+    gTimeoutSpaceCandy = setTimeout(() => removeSpaceCandy(cellPos), SPACE_CANDY_DURATION)
+}
+
+function removeSpaceCandy(pos) {
+    if (!isSpaceCandy(pos) || !gGame.isOn) return
+
+    updateAndRenderCell(pos)
+}
+
 // Returns a new cell object. e.g.: {type: SKY, gameObject: ALIEN}
-function createCell(gameObject = EMPTY) {
+function createCell(type = GAME_TYPES.SKY, gameObject = null) {
     return {
-        type: SKY,
-        gameObject: gameObject
+        type,
+        gameObject
     }
 }
 
 // position such as: {i: 2, j: 7}
-function updateCell(pos, gameObject = EMPTY) {
+function updateAndRenderCell(pos, gameObject = null) {
     gBoard[pos.i][pos.j].gameObject = gameObject
     const elCell = getElCell(pos)
-    elCell.innerHTML = gameObject
+    elCell.innerHTML = gameObject || ''
 }
 
-function renderCell(pos, gameObject = EMPTY) {
-    // gBoard[pos.i][pos.j].gameObject = gameObject
-    const elCell = getElCell(pos)
-    elCell.innerHTML = gameObject
+function updateCell(pos, gameObject = null) {
+    gBoard[pos.i][pos.j].gameObject = gameObject
 }
 
-function onHandleAlienFreeze(elBtn = null) {
-    if (!elBtn) elBtn = document.querySelector('.freeze-btn')
-    elBtn.blur()
-    elBtn.innerText = 'Alien Freeze: ' 
-
-    if (gIsAlienFreeze) {
-        elBtn.innerText += 'OFF'
-        gIsAlienFreeze = false
-    } else {
-        elBtn.innerText += 'ON'
-        gIsAlienFreeze = true
-    }
+function updateType(pos, type = GAME_TYPES.SKY) {
+    gBoard[pos.i][pos.j].type = type
 }
 
-function onRestart(elBtn) {
-    elBtn.classList.add('hint-glow')
-    elBtn.blur()
-    
-    if (gGame.isOn) {
-        elBtn.innerText = 'Start'
-        onInit()
-    } else {
-        elBtn.innerText = 'Restart'
-        onStartGame()
-    }
-}
 
-function clearIntervalsAndTimeouts() {
-    clearInterval(gIntervalAliens)
-    clearInterval(gIntervalCandy)
-}
 
-function addSpaceCandy() {
-    const cellPos = getRndEmptyCandyPos()
-    if (!cellPos) return
 
-    updateCell(cellPos, CANDY)
-    setTimeout(() => removeSuperCandy(cellPos), 5000)
-}
 
-function removeSuperCandy(candyPos) {
-    if (isHero(candyPos)) return
-    
-    updateCell(candyPos, EMPTY)
-}
 
-function enableSpaceCandy() {
-    onHandleAlienFreeze()
-    updateScore(50)
-
-    setTimeout(() => {
-        onHandleAlienFreeze()
-    }, 5000)
-}
-
-function updateScore(diff) {
-    if (!diff) {
-        gScore = 0
-    } else {
-        gScore += diff
-    }
-    document.querySelector('.score').innerHTML = gScore
-}
-
-function updateAliensCount(diff) {
-    if (diff) {
-        gGame.alienCount += diff
-    }
-    document.querySelector('.aliens-count').innerHTML = gGame.alienCount
-}

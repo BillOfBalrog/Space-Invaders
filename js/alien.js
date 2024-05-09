@@ -1,199 +1,289 @@
 'use strict'
 
-const ALIEN_SPEED = 1000
 const ROCK_SPEED = 300
-var gIntervalAliens
-var gIntervalAliensShoot
-var gIntervalThrowRock
-var gTimeoutBlinkRock
-var gAliensDirection = 1
-// const ALIENS = [
-//     '👽',
-//     '🤖',
-//     '👾',
-//     '🛸'
-// ]
-const ALIENS = [
-    '👽',
-    '🤖',
-    '👾',
-    '🛸'
-]
+const INTERVAL_ROCK_FREQ = 2000
+
+let gIntervalAliens
+let gIntervalRock = null
+let gIntervalAliensShoot
 
 // The following two variables represent the part of the matrix (some rows)
 // that we should shift (left, right, and bottom)
 // We need to update those when:
 // (1) shifting down and (2) last alien was cleared from row
-var gAliensTopRowIdx
-var gAliensBottomRowIdx
-var gIsAlienFreeze = false
+let gAliensDirection
+let gAliensTopRowIdx
+let gAliensBottomRowIdx
+let gIsAlienFreeze
+let gIsShiftingAliens
 
 function createAliens(board) {
+    const { rowLength, rowCount } = getLevelOptions() 
+    
     gGame.alienCount = 0
     gAliensTopRowIdx = 0
-    gAliensBottomRowIdx = ALIEN_ROW_COUNT - 1
-    const offsetJ = (BOARD_SIZE - ALIEN_ROW_LENGTH) / 2
-
-    for (var i = 0; i < ALIEN_ROW_COUNT; i++) {
-        for (var j = offsetJ; j < BOARD_SIZE - offsetJ; j++) {
-            board[i][j].gameObject = ALIENS[i]
-            gGame.alienCount ++
+    gAliensBottomRowIdx = rowCount - 1
+    const columnOffset = (BOARD_SIZE - rowLength) / 2
+    
+    for (let i = gAliensTopRowIdx; i < rowCount; i++) {
+        const alienType = `ALIEN${i+1}`
+        for (let j = columnOffset; j < BOARD_SIZE - columnOffset; j++) {
+            board[i][j].gameObject = GAME_OBJECTS[alienType]
+            gGame.alienCount++
         }
     }
 }
 
 function handleAlienHit(pos) {
-    updateAliensCount(-1)
-    if (gGame.alienCount === 0) alert('yoohoo')
+    updateAndRenderCell(pos)
+    gGame.alienCount--
+    gGame.score += 10
+
+    // addEffectToAlienHit(pos)
+    renderScore()
+    renderAliensCount()
+
+    if (isAllAliensCleared()) {
+        handlePlayerVictory()
+        return
+    }
+
+    if (isAlienBottomRowCleared(pos)) gAliensBottomRowIdx--
 }
 
-function shiftBoardRight() {
-    const newBoard = deepCopyBoard(gBoard)
-    for (var i = gAliensBottomRowIdx; i >= gAliensTopRowIdx; i--) {
-        for (var j = BOARD_SIZE - 1; j > 0; j--) {
-            if (isAlien({ i, j: j - 1 })) {
-                newBoard[i][j].gameObject = newBoard[i][j - 1].gameObject
-                newBoard[i][j - 1].gameObject = EMPTY
-            }
-        }
-    }
-    return newBoard
-    // renderBoard(gBoard)
-}
-
-function shiftBoardLeft() {
-    const newBoard = deepCopyBoard(gBoard)
-    for (var i = gAliensBottomRowIdx; i >= gAliensTopRowIdx; i--) {
-        for (var j = 0; j < BOARD_SIZE - 1; j++) {
-            if (isAlien({ i, j: j + 1 })) {
-                newBoard[i][j].gameObject = newBoard[i][j + 1].gameObject
-                newBoard[i][j + 1].gameObject = EMPTY
-            }
-        }
-    }
-    return newBoard
-    // renderBoard(gBoard)
-}
-
-function shiftBoardDown() {
-    const newBoard = deepCopyBoard(gBoard)
-    for (var i = gAliensBottomRowIdx + 1; i >= gAliensTopRowIdx + 1; i--) {
-        for (var j = 0; j < BOARD_SIZE; j++) {
-            if (isAlien({ i: i - 1, j })) {
-                newBoard[i][j].gameObject = newBoard[i - 1][j].gameObject
-                newBoard[i - 1][j].gameObject = EMPTY
-            }
-        }
-    }
-    gAliensBottomRowIdx++
-    gAliensTopRowIdx++
-    return newBoard
-    renderBoard(gBoard)
-}
-`blah.innerHtml =  <asd`
 // runs the interval for moving aliens side to side and down
 // it re-renders the board every time
 // when the aliens are reaching the hero row - interval stops
 function moveAliens() {
-    if (gIsAlienFreeze) return
-    gIsAlienFreeze = true
+    if (!gGame.isOn || gIsAlienFreeze || gIsShiftingAliens) return
+    gIsShiftingAliens = true // might need to use for some functions
 
-    if (isEdgeReached()) {
-        gBoard = shiftBoardDown()
-        gAliensDirection *= - 1
-    } else if (gAliensDirection === 1) {
-         gBoard = shiftBoardRight()
+    if (isAlienAtEdge()) {
+        shiftAliensDown()
+        updateDirectionAndAliensIdx()
+
+        if (isAliensReachedHero()) {
+            handleAliensReachedHero()
+            return
+        }
     } else {
-        gBoard = shiftBoardLeft()
+        if (isAliensShiftingRight()) {
+            shiftAliensRight()
+        } else {
+            shiftAliensLeft()
+        }
     }
 
     renderBoard(gBoard)
-    gIsAlienFreeze = false
+    gIsShiftingAliens = false
 }
 
+function shiftAliensRight() {
+    for (let i = gAliensBottomRowIdx; i >= gAliensTopRowIdx; i--) {
+        for (let j = BOARD_SIZE -1; j > 0; j--) {
+            const toPos = {i, j}
+            const fromPos = {i, j: j - 1}
 
-function revealMines() {
-    for (var i = 0; i < mineLocations.length; i++) {
-        const pos = mineLocations[i]
-        const cell = gBoard[pos.i][pos.j]
-        if (cell.isShown) continue
-
-        console.log('reaveal mine at:', pos)
-        const elCell = getElCell(pos)
-        elCell.innerHTML = MINE_IMG
-        elCell.classList.add('reveal-mine')
-    }
-}
-
-function getUnreveleadMines() {
-    const unreveleadMines = []
-    for (var i = 0; i < SIZE; i++) {
-        for (var j = 0; j < SIZE; j++) {
-            const cell = gBoard[i][j]
-            if (!cell.isShown && cell.isMine) {
-                unreveleadMines.push({i, j})
+            if (isAlien(fromPos)) {
+                if (isLaser(toPos) && !gIsLaserHit) {
+                    handleAlienLaserCollision(fromPos, toPos)
+                } else {
+                    if (isBunker(toPos)) handleBunkerHit(toPos)
+                    shiftAlien(fromPos, toPos)
+                } 
             }
         }
     }
-    if (!unreveleadMines) return null
-    return unreveleadMines
 }
 
+function shiftAliensLeft() {
+    for (let i = gAliensBottomRowIdx; i >= gAliensTopRowIdx; i--) {
+        for (let j = 0; j < BOARD_SIZE - 1; j++) {
+            const toPos = {i, j}
+            const fromPos = {i, j: j + 1}
 
-function isEdgeReached() {
+            if (isAlien(fromPos)) {
+                if (isLaser(toPos) && !gIsLaserHit) {
+                    handleAlienLaserCollision(fromPos, toPos)
+                } else {
+                    if (isBunker(toPos)) handleBunkerHit(toPos)
+                    shiftAlien(fromPos, toPos)
+                } 
+            }
+        }
+    }
+}
+
+function shiftAliensDown() {
+    for (let i = gAliensBottomRowIdx + 1; i > gAliensTopRowIdx; i--) {
+        for (let j = 0; j < BOARD_SIZE; j++) {
+            const toPos = {i, j}
+            const fromPos = {i: i - 1, j } 
+
+            if (isAlien(fromPos)) {
+                if (isLaser(toPos) && !gIsLaserHit) {
+                    handleAlienLaserCollision(fromPos, toPos)
+                } else {
+                    if (isBunker(toPos)) handleBunkerHit(toPos)
+                    shiftAlien(fromPos, toPos)
+                } 
+            }
+        }
+    }
+}
+
+function shiftAlien(fromPos, toPos) {
+    const alienType = getGameObject(fromPos)
+    updateCell(toPos, alienType)
+    updateCell(fromPos)
+}
+
+function handleAlienLaserCollision(fromPos, toPos) {
+    clearInterval(gIntervalLaser)
+    gIsLaserHit = true
+    console.log('Alien colliding with laser during movement')
+    // for now just clear interval and deal with it later
+    
+    handleAlienHit(toPos)
+    updateCell(fromPos)
+    
+    gHero.isShoot = false
+    gIsLaserHit = false
+}
+
+function handleBunkerHit(pos) {
+    updateType(pos)
+    getElCell(pos).classList.remove('BUNKER')
+    getElCell(pos).classList.add('SKY')  
+}
+
+function isAlienBottomRowCleared(pos) {
+    for (let j = 0; j < BOARD_SIZE; j++) {
+        if (isAlien({i: pos.i, j})) return false
+    }
+    return true
+}
+
+function startAlienMovement() {
+    gIntervalAliens = setInterval(moveAliens, getAlienSpeed())
+}
+
+function isAlienAtEdge() {
     const edgeColumn = gAliensDirection === 1 ? BOARD_SIZE - 1 : 0
-    for (var i = 0; i < BOARD_SIZE - 1; i++) {
-        if (gBoard[i][edgeColumn].gameObject === ALIEN) {
-            return true
-        }
+    for (let i = gAliensTopRowIdx; i <= gAliensBottomRowIdx; i++) {
+        if (isAlien({i, j: edgeColumn})) return true
     }
+    return false
 }
 
+function updateDirectionAndAliensIdx() {
+    gAliensTopRowIdx++
+    gAliensBottomRowIdx++
+    gAliensDirection *= -1
+}
+
+function isAliensReachedHero() {
+    // Using gAliensBottomRowIdx should work almost all the time 
+    // But for Thursday deadline it might be better to be
+    // extra safe and check the entire row
+
+    // return gAliensBottomRowIdx >= gHero.pos.i 
+
+    for (let j = 0; j < BOARD_SIZE; j++) {
+        if (isAlien({ i: gHero.pos.i, j})) return true
+    }
+    return false
+}
+
+function handleAliensReachedHero() {
+    // if nothing else to add here
+    // then in future will call gameOver from moveAliens
+    renderBoard(gBoard)
+    gameOver(false)
+}
+
+function getAlienSpeed() {
+    return gDifficultyLevels[gGame.difficulty].speed
+}
+
+////////////////////////////////////////
+// ALIENS SHOOT
+
+///////////////////////////////////////////////////////////////////
+// To instructor / examiner: the notes above shoot() function applies to this as well
+//
+// After Thursday's final deadline I could refine this function
+// So most of it will be handled here and not in lots of functions
+// that some of them are repetitive/redundant
+// But for now if it's working I'm not touching it because it's easier to debug like this
+// And I still have lots of other stuff to do
 function throwRock() {
-    if (!gGame.isOn || gIntervalThrowRock) return
+    if (!gGame.isOn || gIntervalRock) return
 
-    const rockPos = getRndEmptyRockPos()
+    const rockPos = getAlienPosToThrowRock()
     if (!rockPos) return
+    
+    rockPos.i++
 
-    gIntervalThrowRock = setInterval(() => {
-        rockPos.i++
+    gIntervalRock = setInterval(() => {
+        if (rockPos.i >= BOARD_SIZE || isAlien(rockPos) || isRock(rockPos)) {
+            clearRockInterval()
+            return
+        }
+
+        if (isElLaser(rockPos) || isLaser(rockPos)) {
+            onRockHitLaser(rockPos)
+            return
+        }
+
+        if (isBunker(rockPos)) {
+            onRockHitBunker(rockPos)
+            return
+        }
+
+        if (isHero(rockPos)) {
+            onRockHitHero()
+            return
+        }
+
+        // just for safety measures because with slow rock speed it can drop on other aliens
         blinkRock({...rockPos})
-
-        if (rockPos.i >= BOARD_SIZE - 1) {
-            clearInterval(gIntervalThrowRock)
-            gIntervalThrowRock = null
-        }
-    }, ROCK_SPEED)
+        rockPos.i++
+    },ROCK_SPEED)
 }
 
+// Yes I know I could make a single blinkObject function instead of separate functions
 function blinkRock(pos) {
-    updateCell(pos, ROCK)
-    setTimeout(() => {
-        updateCell(pos, EMPTY)
-    }, ROCK_SPEED / 2)
+    if (!isEmpty(pos)) {
+        console.log('Trying to place rock in an occupied cell', getGameObject(pos))
+        return
+    }
+
+    // all these blinking can make with aliens count so buggy that it's best to have safety measures
+    if (isElAlien(pos) || isAlien(pos)) return
+    updateAndRenderCell(pos, GAME_OBJECTS.ROCK)
+
+    gTimeoutBlink = setTimeout(() => {
+        if (isRock(pos)) updateAndRenderCell(pos)
+        else console.log('Trying to clear rock but game object is:', getGameObject(pos))
+    },ROCK_SPEED)
 }
 
-for (var i = 0; i < SIZE; i++) {
-    for (var j = 0; j < SIZE; j++) {
-        const cell = gBoard[i][j]
-        if (!cell.isShown && cell.isMine) {
-            const elCell = getElCell({i, j})
-            elCell.classList.add('reveal-mine')
-        }
-    }
+function onRockHitLaser() {
+    clearInterval(gIntervalLaser)
+    clearRockInterval()
+    console.log('Rock hit a laser')
+    gHero.isShoot = false
 }
 
+function onRockHitBunker(pos) {
+    clearRockInterval()
+    console.log('Rock hit a bunker')
+    handleBunkerHit(pos)
+}
 
-
-function getRndEmptyRockPos() {
-    const rockPoses = []
-    for (var i = gAliensTopRowIdx; i <= gAliensBottomRowIdx; i++) {
-        for (var j = 0; j < BOARD_SIZE; j++) {
-            if (isAlien({i, j}) && !isAlien({i: i + 1, j})) {
-                rockPoses.push({i, j})
-            }
-        }
-    }
-    if (!rockPoses) return null
-    return rockPoses[getRandomInt(rockPoses.length)]
+function onRockHitHero() {
+    clearRockInterval()
+    console.log('Rock hit Hero')
+    if (!gHero.isShield) handleHeroHit()
 }
