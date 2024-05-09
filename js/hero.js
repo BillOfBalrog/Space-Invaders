@@ -1,6 +1,6 @@
 // const LASER_SPEED = 30
 const SHIELD_DURATION = 5000
-const SUPER_LASER_DURATION = 300000
+const SUPER_LASER_DURATION = 3000
 
 let gHero
 let gIntervalLaser
