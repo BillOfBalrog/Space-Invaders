@@ -158,6 +158,7 @@ function clearAllIntervals() {
     if (gIntervalAliensShoot) clearInterval(gIntervalAliensShoot)
     if (gIntervalLaser) clearInterval(gIntervalLaser)
     if (gIntervalSpaceCandy) clearInterval(gIntervalSpaceCandy)
+    gIntervalRock = null
     clearAllLaserIntervals()
 }
 
