@@ -59,7 +59,7 @@ body {
     justify-content: center;
     align-items: center;
     background-repeat: no-repeat;
-    background-image: url(`..img/bg1.png`);
+    background-image: url(`../img/bg1.png`);
     background-size: cover;
     background-position: center;
 
@@ -159,7 +159,7 @@ img {
 }
 
 .BUNKER1 {
-    background-image: url(`..img/bunker1.png`);
+    background-image: url(`../img/bunker1.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
@@ -352,7 +352,7 @@ body {
 }
 
 .BUNKER2 {
-    background-image: url('/img/bunker2.png');
+    background-image: url(`../img/bunker2.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
