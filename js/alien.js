@@ -289,5 +289,5 @@ function onRockHitHero() {
     clearRockInterval()
     console.log('Rock hit Hero')
     if (!gHero.isShield) handleHeroHit()
-    gHero.isShield ? playAudio(gSounds.shieldedHit) : playAudio(gSounds.onRockHitHero)
+    gHero.isShield ? playAudio(gSounds.shieldedHit) : playAudio(gSounds.dazed)
 }
