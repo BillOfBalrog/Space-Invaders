@@ -103,7 +103,7 @@ let gGame = {
 }
 let gIntervalSpaceCandy
 let gTimeoutSpaceCandy
-// let gTimeoutAliensFreeze
+let gTimeoutAliensFreeze
 let gTheme = 1
 
 // Called when game loads
@@ -192,7 +192,8 @@ function handleSpaceCandyHit() {
     renderScore()
     renderFreeze()
 
-    setTimeout(() => {
+    if (gTimeoutAliensFreeze) clearTimeout(gTimeoutAliensFreeze)
+    gTimeoutAliensFreeze = setTimeout(() => {
         gIsAlienFreeze = false
         renderFreeze()
     },FREEZE_ALIENS_DURATION)
