@@ -602,7 +602,7 @@ function toggleTheme() {
 }
 
 function setBackground(imgId){
-    document.body.style.backgroundImage = `url(`../img/bg${imgId}.png`)`
+    document.body.style.backgroundImage = `url('../img/bg${imgId}.png')`
 }
 
 function toggleModal() {
