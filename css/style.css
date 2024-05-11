@@ -369,7 +369,7 @@ td {
     top: 45%;
     transform: translate(-10%, -50%);
     width: 300px;
-    height: 539px;
+    min-height: 539px;
     background-color: rgba(128, 0, 32, 0.5);
     background-repeat: no-repeat;
     background-size: cover;
