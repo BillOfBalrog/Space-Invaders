@@ -59,7 +59,7 @@ body {
     justify-content: center;
     align-items: center;
     background-repeat: no-repeat;
-    background-image: url("/img/bg1.png");
+    background-image: url(`..img/bg1.png`);
     background-size: cover;
     background-position: center;
 
@@ -159,25 +159,25 @@ img {
 }
 
 .BUNKER1 {
-    background-image: url('/img/bunker1.png');
+    background-image: url(`..img/bunker1.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
 
 .BUNKER3 {
-    background-image: url('/img/bunker3.png');
+    background-image: url(`../img/bunker3.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
 
 .GROUND {
-    background-image: url('/img/ground3.png');
+    background-image: url(`../img/ground3.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
 
 .HERO_GROUND {
-    background-image: url('/img/ground3-180.png');
+    background-image: url(`../img/ground3-180.png`);
     background-size: cover;
     background-repeat: no-repeat;
 }
@@ -330,7 +330,7 @@ body {
     justify-content: center;
     align-items: center;
     background-repeat: no-repeat;
-    background-image: url('/img/bg1.png');
+    background-image: url(`../img/bg1.png`);
     background-size: cover;
     background-position: center;
     display: grid;
