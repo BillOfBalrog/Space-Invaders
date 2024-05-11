@@ -139,8 +139,9 @@ function renderCell(pos, img) {
 }
 
 function renderFreeze() {
-    const elFreezeSpan =  getEl('.freeze-btn span')
-    elFreezeSpan.innerText = gIsAlienFreeze ? 'On' : 'Off'
+    const elFreeze =  getEl('.freeze-btn')
+    if (gIsAlienFreeze) elFreeze.classList.remove('inactive')
+    else  elFreeze.classList.add('inactive')
 }
 
 ////////////////////////////////////////////////////
