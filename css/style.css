@@ -1,0 +1,420 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none
+}
+
+table.board-container {
+    border-collapse: collapse;
+    margin: 20px auto;
+}
+
+td {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 20px;
+    color: white;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    margin: auto 10px;
+}
+
+.game-modes {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 500px;
+    transition: background-color, border-color, color, box-shadow, filter .3s;
+    border: 1px solid transparent;
+    letter-spacing: 2px;
+    min-width: 120px;
+    font-weight: 700;
+    text-align: center;
+    padding: 10px 12px 12px;
+    box-shadow: inset 0 0 0 2px #616467;
+    background-color: transparent;
+    height: 40px;
+    margin-top: 15px;
+    color: antiquewhite;
+}
+
+.game-modes:hover {
+    color: #fff;
+    background-color: #616467;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-repeat: no-repeat;
+    background-image: url('../img/bg1.png');
+    background-size: cover;
+    background-position: center;
+
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.game-stats-container,
+.controls-container {
+    display: flex;
+    align-items: center;
+    border: 3px solid #333;
+    padding: 10px;
+    border-radius: 10px;
+    font-family: fantasy;
+    /* color: aqua; */
+    color: aqua;
+
+}
+
+.game-stats-container {
+    margin: auto;
+    justify-content: flex-start;
+}
+
+.game-stats-container div {
+    margin-right: 60px;
+    font-size: 24px;
+}
+
+.game-stats-container > div:last-child,
+.controls-container > div:last-child {
+    margin-right: 0;
+}
+
+.controls-container {
+    justify-content: flex-start;
+    cursor: pointer;
+}
+
+.controls-container > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-right: 30px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    /* color: #333;
+    color: rgb(250, 250, 250); */
+    color: #333;
+    color: rgb(250, 250, 250);
+    font-weight: 700;                       
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); 
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+}
+
+.hidden {
+    display: none;
+}
+
+.alien {
+    display: inline-block;
+    transition: transform 0.5s ease;
+}
+
+.alien.hit {
+    animation: fadeOutScale 0.5s forwards;
+}
+
+@keyframes fadeOutScale {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+img {
+    height: 30px;
+    width: 30px;
+}
+
+.BUNKER1 {
+    background-image: url('../img/bunker1.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.BUNKER3 {
+    background-image: url('../img/bunker3.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.GROUND {
+    background-image: url('../img/ground3.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.HERO_GROUND {
+    background-image: url('../img/ground3-180.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.transform-180 {
+    background-size: cover;
+    background-repeat: no-repeat;
+    transform: scaleY(-1);
+}
+
+.board-container {
+    border-collapse: separate;
+    border-spacing: 10px;
+    margin: 20px auto;
+}
+
+td.cell {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+    /* background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); */
+}
+
+.borders {
+    /* background-color: rgba(0, 0, 0, 0.6); 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);  */
+
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+td.cell:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.cell-14-0 {
+    border-bottom-left-radius: 20%;
+}
+
+.cell-14-13 {
+    border-bottom-right-radius: 20%;
+}
+
+.controls-container .icon {
+    filter: saturate(150%);
+}
+
+.controls-container {
+    background-color: rgba(150, 140, 130, 0.3);
+}
+
+.controls-container .icon {
+    filter: saturate(150%);
+}
+.win-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 50, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.win-modal-content {
+    position: absolute;
+    display: inline-block;
+    top: 200px;
+    background: rgba(0, 150, 255, 0.3);
+    border-radius: 15px;
+    width: 300px;
+    max-width: 80%;
+    padding: 20px;
+    text-align: center;
+    color: #ffffff;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: borderGlow 2s linear infinite;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+@keyframes borderGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(0, 150, 255, 0.8), 0 0 20px rgba(0, 150, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(0, 150, 255, 0.5), 0 0 30px rgba(0, 150, 255, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(0, 150, 255, 0.8), 0 0 20px rgba(0, 150, 255, 0.5);
+    }
+}
+
+.win-modal-message1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-top: 30px;
+    color: #EDEDED;
+}
+
+.win-modal-message2 {
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    text-align: left;
+    color: #FFFFFF;
+    margin-top: 70px;
+    margin-bottom: 30px;
+    display: inline-block;
+    max-width: 90%;
+    line-height: 1.6;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.win-modal-content button {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.5em;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    text-align: left;
+}
+
+
+.hidden {
+    display: none;
+}
+
+.controls-icon {
+    font-size: 30px; 
+    /* cursor: pointer;  */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-repeat: no-repeat;
+    background-image: url('../img/bg1.png');
+    background-size: cover;
+    background-position: center;
+    display: grid;
+
+    place-items: center;
+    min-height: 100vh; 
+    margin: 0; 
+}
+
+.inactive {
+    color: #ccc;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.inactive-img {
+    filter: grayscale(100%); 
+    opacity: 0.3;         
+}
+
+.BUNKER2 {
+    background-image: url('../img/bunker2.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+td {
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
+}
+
+.instructions-modal {
+    position: absolute;
+    left: 7%;
+    top: 45%;
+    transform: translate(-10%, -50%);
+    width: 300px;
+    min-height: 539px;
+    background-color: rgba(128, 0, 32, 0.5);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    padding: 20px;
+    overflow: auto;
+    text-align: left;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 0, 255, 0.5);
+    border-radius: 15px;
+    backdrop-filter: blur(8px);
+}
+
+.instructions-divider {
+    height: 3px;
+    background-color: #ffffff;
+    margin: 20px 0;
+}
+
+.instructions-modal h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-family: 'Arial Black', Gadget, sans-serif;
+    font-size: 22px;
+    color: #ffdd44;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.instructions-modal p {
+    text-align: left;
+    font-family: 'Verdana', Geneva, sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+    margin: 5px 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.keys {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-weight: bold;
+    color: #000;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    margin-right: 5px;
+    display: inline-block;
+    text-align: center;
+}

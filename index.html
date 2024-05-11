@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:," type="image/x-icon">
+</head>
+
+<body onload="init()" onkeydown="onKeyDown(event)" oncontextmenu="event.preventDefault()">
+
+    <div class="container">
+        <div class="game-stats-container">
+            <div title="Current number of lives"><span class="hero-lives"></span></div>
+            <div title="Current number of shields"><span class="herbo-shields"></span></div>
+            <div title="Current number of super lasers"><span class="hero-super-lasers"></span></div>
+            <div title="Remaining aliens">👽 <span class="aliens-count"></span></div>
+            <div title="Game score">🎯 <span class="game-score"></span></div>
+        </div>
+        
+        <table class="board-container">
+            <tbody class="board">
+            </tbody>
+        </table>
+
+        <div class="controls-container">
+            <div title="Start the game. Press [Enter]">
+                <div class="start-btn controls-icon" onclick="handleOnStartGame(this)">▶️</div>
+                <div onclick="handleOnStartGame(document.querySelector('.start-btn'))">Start</div>
+            </div>
+            <div title="Reset the game. Press [R]">
+                <div class="reset-btn controls-icon" onclick="handleOnRestartGame()">🔄</div>
+                <div onclick="handleOnRestartGame()">Reset</div>
+            </div>
+            <div title="Open instructions. Press [I]">
+                <div class="instructions-btn controls-icon" onclick="openInstructionsModal()">📜</div>
+                <div onclick="openInstructionsModal()">Instructions</div>
+            </div>
+            <div title="Toggle sound on/off. Press[M]">
+                <div class="sound-btn">
+                    <span class="sound-on controls-icon" onclick="toggleSound()">🔊</span>
+                    <span class="sound-off hidden controls-icon" onclick="toggleSound()">🔇</span>
+                </div>
+                <div onclick="toggleSound()">Sound</div>
+            </div>
+            <div title="Add/remove bunker. Press [B] ">
+                <div class="bunkers-btn controls-icon" onclick="toggleBunkers(this)">🧱</div>
+                <div onclick="toggleBunkers(document.querySelector('.bunkers-btn'))">Bunkers</div>
+            </div>
+            <div title="Add/remove borders. Press [Q] ">
+                <div class="borders-btn controls-icon" onclick="toggleBorders(this)">🖼️</div>
+                <div onclick="toggleBorders(document.querySelector('.borders-btn'))">Borders</div>
+            </div>
+            <div title="Change game themes. Press [T]">
+                <div onclick="toggleTheme()" class="theme controls-icon">🎨<span></span></div>
+                <div onclick="toggleTheme()">Theme</div>
+            </div>
+            <div title="Freeze aliens. (Try not to cheat!). Press [F]">
+                <div class="freeze-btn controls-icon inactive" onclick="handleOnAlienFreeze()">❄️</div>
+                <div onclick="handleOnAlienFreeze()">Freeze Aliens</div>
+            </div>
+        </div>
+
+        <div class="game-modes-container">
+            <button class="game-modes" onclick="setDifficultyLevel('easy')">Easy</button>
+            <button class="game-modes" onclick="setDifficultyLevel('normal')">Normal</button>
+            <button class="game-modes" onclick="setDifficultyLevel('hard')">Hard</button>
+            <button class="game-modes" onclick="setDifficultyLevel('extreme')">Extreme</button>
+        </div>
+    </div>
+  
+    <div onclick="toggleModal()" onkeydown="toggleModal()" class="win-modal-overlay hidden">
+        <div class="win-modal-content">
+            <h1 class="win-modal-message1"></h1>
+            <p class="win-modal-message2"></p>
+            <button>x</button>
+        </div>
+    </div>
+
+    <div class="instructions-modal hidden">
+        <div class="instructions-content">
+            <div class="instructions-section">
+                <h2>Game Controls</h2>
+                <p><span class="keys">Space</span> - Shoot</p>
+                <p><span class="keys">Z</span> - Activate Shield</p>
+                <p><span class="keys">X</span> - Activate Super Laser</p>
+                <p><span class="keys">N</span> - Blow up Aliens nearby</p>
+            </div>
+            <div class="instructions-divider"></div>
+            <div class="instructions-section">
+                <h2>Keyboard Shortcuts</h2>
+                <p><span class="keys">Enter</span> - Start game</p>
+                <p><span class="keys">Reset</span> - Reset the game</p>
+                <p><span class="keys">1,2,3,4</span> - Swap difficulty levels</p>
+                <p><span class="keys">T</span> - Cycle through various themes</p>
+                <p><span class="keys">B</span> - Add/Remove Bunkers</p>
+                <p><span class="keys">Q</span> - Toggle clean play board</p>
+                <p><span class="keys">M</span> - Toggle sound on/off</p>
+                <p><span class="keys">I</span> - Open/Close instructions</p>
+                <p><span class="keys">F</span> - Are you a cheater?</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/utils.js"></script>
+    <script src="js/alien.js"></script>
+    <script src="js/hero.js"></script>
+    <script src="js/game.js"></script>
+
+</body>
+
+</html>
