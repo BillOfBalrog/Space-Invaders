@@ -596,8 +596,6 @@ function toggleTheme() {
             count++
         }
     }
-    GAME_OBJECTS.BUNKER = `<img src="../img/alien${gTheme}.png">`
-
     init()
 }
 
