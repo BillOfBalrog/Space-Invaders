@@ -59,7 +59,7 @@ body {
     justify-content: center;
     align-items: center;
     background-repeat: no-repeat;
-    background-image: url('/img/bg1.png');
+    background-image: url("/img/bg1.png");
     background-size: cover;
     background-position: center;
 
