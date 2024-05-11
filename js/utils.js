@@ -592,7 +592,7 @@ function toggleTheme() {
         if (key.startsWith('ALIEN')) {
             console.log('hola')
             const imgId = ((gTheme - 1) * 5) + count
-            GAME_OBJECTS[key] = `<img src="../img/alien${imgId}.png">`
+            GAME_OBJECTS[key] = `<img src="img/alien${imgId}.png">`
             count++
         }
     }
@@ -600,7 +600,7 @@ function toggleTheme() {
 }
 
 function setBackground(imgId){
-    document.body.style.backgroundImage = `url('../img/bg${imgId}.png')`
+    document.body.style.backgroundImage = `url('img/bg${imgId}.png')`
 }
 
 function toggleModal() {
