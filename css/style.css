@@ -418,3 +418,27 @@ td {
     display: inline-block;
     text-align: center;
 }
+
+body {
+    background-image: url("../img/bg1.png");
+}
+
+.BUNKER1 {
+    background-image: url("../img/bunker1.png");
+}
+
+.BUNKER3 {
+    background-image: url("../img/bunker3.png");
+}
+
+.GROUND {
+    background-image: url("../img/ground3.png");
+}
+
+.HERO_GROUND {
+    background-image: url("../img/ground3-180.png");
+}
+
+.BUNKER2 {
+    background-image: url("../img/bunker2.png");
+}
