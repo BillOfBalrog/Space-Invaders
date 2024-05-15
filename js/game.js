@@ -99,7 +99,7 @@ let gGame = {
     isAudioOn: true,
     difficulty: 'normal',
     isBunkers: true,
-    isBorders: true
+    isBorders: false
 }
 let gIntervalSpaceCandy
 let gTimeoutSpaceCandy
