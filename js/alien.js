@@ -154,7 +154,7 @@ function handleAlienLaserCollision(fromPos, toPos) {
 
 function handleBunkerHit(pos) {
     updateType(pos)
-    getElCell(pos).classList.remove('BUNKER')
+    getElCell(pos).classList.remove(`BUNKER${gTheme}`)
     getElCell(pos).classList.add('SKY')  
 }
 
